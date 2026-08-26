@@ -180,3 +180,38 @@ class WindCSMARStubProvider(BaseFactorProvider):
     ) -> pd.DataFrame:
         syn = SyntheticFactorProvider(seed=888)
         return syn.get_factors(start_date, end_date, analysis_date)
+
+
+class EastMoneyMiaoXiangProvider(BaseFactorProvider):
+    """
+    东方财富“妙想”金融大模型与 Agent Skills 因子适配器。
+    支持获取标准 4 因子及微观资金流衍生因子（主力大单净流、北向资金、机构席位）。
+    """
+    def __init__(self, cache_db: str = "data/cache/eastmoney_miaoxiang.db"):
+        from src.skills.eastmoney_miaoxiang_skill import EastMoneyMiaoXiangSkill
+        self.skill = EastMoneyMiaoXiangSkill(cache_db=cache_db)
+
+    def get_factors(
+        self,
+        start_date: str = "2020-01-01",
+        end_date: Optional[str] = None,
+        analysis_date: Optional[str] = None
+    ) -> pd.DataFrame:
+        df = self.skill.get_daily_factors_with_capital_flows(start_date, end_date or "2025-12-31")
+        if df.empty:
+            return pd.DataFrame()
+        if analysis_date is not None:
+            df = df.loc[:pd.to_datetime(analysis_date)]
+        return df[["MKT_RF", "SMB", "HML", "MOM", "RF"]]
+
+    def get_factors_with_capital_flows(
+        self,
+        start_date: str = "2020-01-01",
+        end_date: Optional[str] = None,
+        analysis_date: Optional[str] = None
+    ) -> pd.DataFrame:
+        df = self.skill.get_daily_factors_with_capital_flows(start_date, end_date or "2025-12-31")
+        if analysis_date is not None and not df.empty:
+            df = df.loc[:pd.to_datetime(analysis_date)]
+        return df
+

@@ -174,5 +174,30 @@ class TestStockDashboardFullPipeline(unittest.TestCase):
         self.assertIn("phase3", report["stages"])
         self.assertIn("phase4", report["stages"])
 
+    def test_eastmoney_miaoxiang_skill_and_provider(self):
+        from src.skills.eastmoney_miaoxiang_skill import EastMoneyMiaoXiangSkill
+        from src.utils.factor_providers import EastMoneyMiaoXiangProvider
+
+        skill = EastMoneyMiaoXiangSkill(cache_db="data/cache/test_eastmoney_miaoxiang.db")
+        
+        # 1. 产业链图谱
+        node = skill.get_supply_chain_ontology("001309")
+        self.assertIsNotNone(node)
+        self.assertEqual(node.target_name, "德明利")
+        self.assertTrue(len(node.upstream_suppliers) > 0)
+
+        # 2. 市场情绪快照
+        breadth = skill.get_market_breadth_snapshot("2025-01-10")
+        self.assertTrue(0.0 <= breadth.temperature_score <= 100.0)
+        self.assertTrue(breadth.total_turnover_cny > 0)
+
+        # 3. 因子适配器与微观资金流
+        provider = EastMoneyMiaoXiangProvider(cache_db="data/cache/test_eastmoney_miaoxiang.db")
+        df_factors = provider.get_factors_with_capital_flows("2025-01-01", "2025-01-10")
+        self.assertFalse(df_factors.empty)
+        self.assertIn("LARGE_ORDER_INFLOW", df_factors.columns)
+        self.assertIn("NORTHBOUND_DELTA", df_factors.columns)
+        self.assertIn("MKT_RF", df_factors.columns)
+
 if __name__ == "__main__":
     unittest.main()
