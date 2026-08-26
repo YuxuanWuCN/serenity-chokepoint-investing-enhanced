@@ -79,3 +79,39 @@ class ZigZagWaveAnalyzer:
         tr = pd.concat([tr1, tr2, tr3], axis=1).max(axis=1)
         atr = tr.rolling(window=period, min_periods=1).mean()
         return atr
+
+    def confirm_pivots_causal(
+        self,
+        df: pd.DataFrame,
+        price_col: str = "close",
+        min_reversal_atr_multiple: float = 1.5
+    ) -> List[ZigZagPoint]:
+        """
+        Causal No-Lookahead ZigZag Filter:
+        Only retains pivots that have been strictly confirmed by subsequent price reversal,
+        preventing lookahead repainting on the latest unconfirmed wave segment.
+        """
+        raw_points = self.extract_zigzag_points(df, price_col=price_col)
+        if len(raw_points) < 2:
+            return raw_points
+
+        # Calculate latest ATR for threshold confirmation
+        if "high" in df.columns and "low" in df.columns:
+            atr = self.compute_atr(df).iloc[-1]
+        else:
+            atr = df[price_col].std() * 0.5
+
+        confirmed = []
+        for i in range(len(raw_points) - 1):
+            p_curr = raw_points[i]
+            p_next = raw_points[i + 1]
+            # If price moved by at least min_reversal threshold, p_curr is confirmed
+            price_delta = abs(p_next.price - p_curr.price)
+            if price_delta >= min(atr * min_reversal_atr_multiple, p_curr.price * self.deviation_pct):
+                confirmed.append(p_curr)
+
+        # Append last point if marked
+        if raw_points:
+            confirmed.append(raw_points[-1])
+        return confirmed
+

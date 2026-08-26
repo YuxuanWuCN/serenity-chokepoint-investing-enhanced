@@ -51,5 +51,20 @@ class TestFamaMacBeth(unittest.TestCase):
         self.assertTrue(eval_res["passed"])
         self.assertEqual(eval_res["decision"], AlphaDecision.HIGH_CONVICTION)
 
+    def test_adaptive_hac_lags(self):
+        # Formula: max(1, floor(4 * (T / 100)^(2/9)))
+        self.assertEqual(FamaMacBethRegressor.calc_newey_west_lags(100), 4)
+        self.assertEqual(FamaMacBethRegressor.calc_newey_west_lags(250), 4)
+        self.assertEqual(FamaMacBethRegressor.calc_newey_west_lags(500), 5)
+        self.assertEqual(FamaMacBethRegressor.calc_newey_west_lags(10), 2)
+
+    def test_vif_calculation(self):
+        factors = DataFetcher.generate_synthetic_factors(n_periods=250, seed=42)
+        vif_dict = FamaMacBethRegressor.calc_vif(factors[["MKT_RF", "SMB", "HML", "MOM"]])
+        self.assertIn("MKT_RF", vif_dict)
+        self.assertIn("SMB", vif_dict)
+        for val in vif_dict.values():
+            self.assertTrue(val < 5.0) # Synthetic factors are orthogonal, VIF ~ 1.0
+
 if __name__ == '__main__':
     unittest.main()
