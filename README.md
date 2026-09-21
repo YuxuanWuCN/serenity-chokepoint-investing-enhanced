@@ -8,7 +8,7 @@
 
 ## Overview
 
-An enhanced research skill for AI infrastructure supply-chain chokepoint investing, compatible with **OpenClaw / Hermes** agent platforms.
+An enhanced research skill for AI infrastructure supply-chain chokepoint investing, compatible with **OpenClaw / Hermes / Antigravity** agent platforms.
 
 This is NOT a buy/sell recommendation engine. It is a structured research workflow that helps an agent:
 1. Identify whether a company sits inside a real supply-chain bottleneck
@@ -16,7 +16,7 @@ This is NOT a buy/sell recommendation engine. It is a structured research workfl
 3. **Verify the hypothesis with code** (Fama-MacBeth regression, Information Ratio)
 4. Size positions based on **statistical evidence**
 
-一套增强版AI基础设施供应链瓶颈投资研究技能，兼容 **OpenClaw / Hermes** 智能体平台。
+一套增强版AI基础设施供应链瓶颈投资研究技能，兼容 **OpenClaw / Hermes / Antigravity** 智能体平台。
 
 这不是一个买入/卖出推荐引擎。它是一个结构化研究工作流，帮助智能体：
 1. 识别一家公司是否处于真正的供应链瓶颈中
@@ -169,6 +169,11 @@ serenity-chokepoint-investing-enhanced/
 │       ├── 0004-fact-opinion-triangulation.md
 │       ├── 0005-cross-validation-layer.md
 │       └── 0006-catalyst-driven-position-sizing.md
+├── .agents/
+│   └── skills/
+│       └── serenity-chokepoint-investing/  # Antigravity workspace skill (auto-synced)
+├── scripts/
+│   └── sync-skills.sh                 # Re-syncs skills into .agents/skills/ (+ optional global install)
 └── serenity-chokepoint-investing/
     └── SKILL.md                       # Deployable skill file (v2.1)
 ```
@@ -177,10 +182,24 @@ serenity-chokepoint-investing-enhanced/
 
 ## Installation
 
+**OpenClaw / Hermes:**
+
 ```bash
 git clone https://github.com/yuyang-rgb094/serenity-chokepoint-investing-enhanced.git
 cp -r serenity-chokepoint-investing-enhanced/serenity-chokepoint-investing \
   /path/to/your/openclaw/skills/
+```
+
+**Antigravity:**
+
+```bash
+# Workspace scope — already synced under .agents/skills/, just open this repo in Antigravity
+
+# Global scope (all workspaces) — copies into ~/.gemini/antigravity/skills/
+./scripts/sync-skills.sh --global
+
+# After editing serenity-chokepoint-investing/SKILL.md, re-sync the workspace copy:
+./scripts/sync-skills.sh
 ```
 
 ---
