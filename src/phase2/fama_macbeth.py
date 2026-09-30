@@ -114,8 +114,9 @@ class FamaMacBethRegressor:
         r2 = float(model.rsquared)
         resid_std = float(np.std(model.resid, ddof=len(model.params)))
         
-        # Daily IR = alpha / resid_std, annualized IR = (alpha * 252) / (resid_std * np.sqrt(252)) = IR_daily * sqrt(252)
-        ir_annualized = float((alpha / resid_std) * np.sqrt(252)) if resid_std > 1e-9 else 10.0
+        # Daily IR = alpha / resid_std, annualized IR = daily_ir * sqrt(252)
+        daily_ir = float(alpha / resid_std) if resid_std > 1e-9 else 0.0
+        ir_annualized = float(daily_ir * np.sqrt(252))
 
         betas = {col: float(model.params[col]) for col in factor_cols}
         beta_tstats = {col: float(model.tvalues[col]) for col in factor_cols}
@@ -129,7 +130,7 @@ class FamaMacBethRegressor:
             betas=betas,
             beta_tstats=beta_tstats,
             residual_std=resid_std,
-            ir=ir_annualized,
+            ir=daily_ir,
             n_obs=n_obs,
             hac_robust=self.use_hac,
             vif=vif_scores,

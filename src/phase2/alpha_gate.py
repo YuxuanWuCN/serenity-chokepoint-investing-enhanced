@@ -25,10 +25,12 @@ class AlphaGate:
         gmm_result: Optional[Dict[str, Any]] = None
     ) -> Dict[str, Any]:
         if reg_result.alpha_pvalue > self.config.p_value_threshold:
+            msg = f"Alpha is not statistically significant (p={reg_result.alpha_pvalue:.4f} > {self.config.p_value_threshold})"
             return {
                 "passed": False,
                 "decision": AlphaDecision.REJECT_NON_SIGNIFICANT,
-                "reason": f"Alpha is not statistically significant (p={reg_result.alpha_pvalue:.4f} > {self.config.p_value_threshold})",
+                "reason": msg,
+                "description": msg,
                 "suggested_action": "Avoid / Watchlist",
                 "alpha": reg_result.alpha,
                 "ir": reg_result.ir,
@@ -36,10 +38,12 @@ class AlphaGate:
             }
 
         if reg_result.ir < self.config.ir_reject_threshold:
+            msg = f"Information Ratio too low (IR={reg_result.ir:.4f} < {self.config.ir_reject_threshold})"
             return {
                 "passed": False,
                 "decision": AlphaDecision.REJECT_LOW_IR,
-                "reason": f"Information Ratio too low (IR={reg_result.ir:.4f} < {self.config.ir_reject_threshold})",
+                "reason": msg,
+                "description": msg,
                 "suggested_action": "Reject - Alpha not economically meaningful",
                 "alpha": reg_result.alpha,
                 "ir": reg_result.ir,
@@ -47,10 +51,12 @@ class AlphaGate:
             }
 
         if gmm_result and not gmm_result.get("is_persistent", True):
+            msg = "Alpha lacks persistence across sub-periods in GMM check"
             return {
                 "passed": False,
                 "decision": AlphaDecision.REJECT_NON_PERSISTENT,
-                "reason": "Alpha lacks persistence across sub-periods in GMM check",
+                "reason": msg,
+                "description": msg,
                 "suggested_action": "Watchlist / Downgrade conviction",
                 "alpha": reg_result.alpha,
                 "ir": reg_result.ir,
@@ -67,10 +73,12 @@ class AlphaGate:
             decision = AlphaDecision.INTERESTING_SMALL
             action = "Interesting, small position only"
 
+        msg = f"Alpha statistically (p={reg_result.alpha_pvalue:.4f}) and economically (IR={reg_result.ir:.4f}) verified"
         return {
             "passed": True,
             "decision": decision,
-            "reason": f"Alpha statistically (p={reg_result.alpha_pvalue:.4f}) and economically (IR={reg_result.ir:.4f}) verified",
+            "reason": msg,
+            "description": msg,
             "suggested_action": action,
             "alpha": reg_result.alpha,
             "ir": reg_result.ir,

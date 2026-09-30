@@ -39,7 +39,7 @@ class TestStockDashboardFullPipeline(unittest.TestCase):
 
     def test_phase2_fama_macbeth_and_gate(self):
         factors = DataFetcher.generate_synthetic_factors(n_periods=250, seed=42)
-        stock = DataFetcher.generate_synthetic_stock(factors, true_alpha=0.0005, betas=(1.0, 0.2, 0.3, 0.1), residual_std=0.001, seed=42)
+        stock = DataFetcher.generate_synthetic_stock(factors, true_alpha=0.0015, betas=(1.0, 0.2, 0.3, 0.1), residual_std=0.001, seed=42)
         reg = FamaMacBethRegressor(use_hac=True)
         res = reg.run_time_series_ols(stock, factors)
         
@@ -198,6 +198,30 @@ class TestStockDashboardFullPipeline(unittest.TestCase):
         self.assertIn("LARGE_ORDER_INFLOW", df_factors.columns)
         self.assertIn("NORTHBOUND_DELTA", df_factors.columns)
         self.assertIn("MKT_RF", df_factors.columns)
+
+    def test_pipeline_alpha_gate_rejection(self):
+        from src.pipeline import SerenityPipelineRunner
+        runner = SerenityPipelineRunner()
+        dates = pd.date_range("2024-01-01", periods=100, freq="B")
+        np.random.seed(99)
+        noisy_stock = pd.Series(np.random.normal(0, 0.05, 100), index=dates)
+        kline = pd.DataFrame({
+            "open": np.ones(100),
+            "high": np.ones(100) * 1.01,
+            "low": np.ones(100) * 0.99,
+            "close": np.ones(100)
+        }, index=dates)
+
+        report = runner.run_full_pipeline(
+            ticker="001258",
+            unstructured_research_text="[FACT:Wind] 001258 report",
+            stock_returns=noisy_stock,
+            kline_df=kline,
+            target_financials={"ticker": "001258", "revenue_growth_yoy": 0.1},
+            downstream_financials={"ticker": "CUST", "capex_growth_yoy": 0.1}
+        )
+        self.assertEqual(report["overall_decision"], "REJECT")
+        self.assertIn("Failed Phase 2 Alpha Gate", report["reason"])
 
 if __name__ == "__main__":
     unittest.main()

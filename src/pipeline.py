@@ -84,7 +84,8 @@ class SerenityPipelineRunner:
         }
 
         if not alpha_eval["passed"]:
-            report["reason"] = f"Failed Phase 2 Alpha Gate: {alpha_eval['description']}"
+            fail_reason = alpha_eval.get("reason", alpha_eval.get("description", "Failed Alpha Gate"))
+            report["reason"] = f"Failed Phase 2 Alpha Gate: {fail_reason}"
             return report
 
         # Stage 3: KHunter Wave 4 Timing Gate
